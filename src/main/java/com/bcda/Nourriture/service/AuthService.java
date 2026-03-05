@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bcda.Nourriture.entity.User;
 import com.bcda.Nourriture.entity.UserRole;
+import com.bcda.Nourriture.exception.UserAlreadyExistsException;
 import com.bcda.Nourriture.repository.UserRepository;
 import com.bcda.Nourriture.security.JwtTokenProvider;
 
@@ -31,7 +32,7 @@ public class AuthService implements UserDetailsService {
 
     public User register(String nom, String prenom, String email, String password, String telephone) {
         if (userRepository.existsByMail(email)) {
-            throw new RuntimeException("L'email " + email + " est déjà enregistré");
+            throw new UserAlreadyExistsException("L'email " + email + " est déjà enregistré");
         }
 
         User user = User.builder()

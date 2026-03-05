@@ -48,7 +48,7 @@ public class RecetteMapper {
                 .dureePreparation(recetteDTO.getDureePreparation())
                 .dureeCuisson(recetteDTO.getDureeCuisson())
                 .nombreCalorie(recetteDTO.getNombreCalorie())
-                .partage(recetteDTO.getPartage() != null ? recetteDTO.getPartage() : false)
+                .partage(recetteDTO.getPartage() != null && recetteDTO.getPartage())
                 .build();
     }
 }
