@@ -4,27 +4,21 @@
 -- Note: Les mots de passe sont encodés en BCrypt
 -- Mot de passe: "password123" -> $2a$10$slYQmyNdGzin7olVN3p5be3DlH.PKZbv5H8KnzzVgXXbVxzy990qm
 
+DROP DATABASE IF EXISTS nourriture_db;
+
 -- ============================================
 -- CRÉATION DE LA BASE DE DONNÉES
 -- ============================================
 CREATE DATABASE IF NOT EXISTS nourriture_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE nourriture_db;
 
--- ============================================
--- SUPPRESSION DES TABLES (optionnel)
--- ============================================
--- DROP TABLE IF EXISTS user_recettes_favorites;
--- DROP TABLE IF EXISTS recette_ingredient;
--- DROP TABLE IF EXISTS recette;
--- DROP TABLE IF EXISTS ingredient;
--- DROP TABLE IF EXISTS `user`;
 
 -- ============================================
 -- CRÉATION DES TABLES
 -- ============================================
 
--- Table USER
-CREATE TABLE IF NOT EXISTS `user` (
+-- Table USERS
+CREATE TABLE users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     nom VARCHAR(255) NOT NULL,
     prenom VARCHAR(255) NOT NULL,
@@ -36,8 +30,8 @@ CREATE TABLE IF NOT EXISTS `user` (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table INGREDIENT
-CREATE TABLE IF NOT EXISTS ingredient (
+-- Table INGREDIENTS
+CREATE TABLE ingredients (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     libelle VARCHAR(255) NOT NULL UNIQUE,
     type VARCHAR(50) NOT NULL,
@@ -46,8 +40,8 @@ CREATE TABLE IF NOT EXISTS ingredient (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table RECETTE
-CREATE TABLE IF NOT EXISTS recette (
+-- Table RECETTES
+CREATE TABLE recettes (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     nom_plat VARCHAR(255) NOT NULL,
     duree_preparation INT,
@@ -57,11 +51,11 @@ CREATE TABLE IF NOT EXISTS recette (
     user_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table RECETTE_INGREDIENT (table de jointure)
-CREATE TABLE IF NOT EXISTS recette_ingredient (
+CREATE TABLE recette_ingredient (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     quantite DOUBLE NOT NULL,
     unite VARCHAR(50) NOT NULL,
@@ -69,36 +63,30 @@ CREATE TABLE IF NOT EXISTS recette_ingredient (
     ingredient_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (recette_id) REFERENCES recette(id) ON DELETE CASCADE,
-    FOREIGN KEY (ingredient_id) REFERENCES ingredient(id) ON DELETE CASCADE,
+    FOREIGN KEY (recette_id) REFERENCES recettes(id) ON DELETE CASCADE,
+    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id) ON DELETE CASCADE,
     UNIQUE KEY uk_recette_ingredient (recette_id, ingredient_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table USER_RECETTES_FAVORITES (table de jointure)
-CREATE TABLE IF NOT EXISTS user_recettes_favorites (
-    users_id BIGINT NOT NULL,
-    recettes_favorites_id BIGINT NOT NULL,
+-- Table USER_RECETTE_FAVORITE (table de jointure)
+CREATE TABLE user_recette_favorite (
+    user_id BIGINT NOT NULL,
+    recette_id BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (users_id) REFERENCES `user`(id) ON DELETE CASCADE,
-    FOREIGN KEY (recettes_favorites_id) REFERENCES recette(id) ON DELETE CASCADE,
-    PRIMARY KEY (users_id, recettes_favorites_id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (recette_id) REFERENCES recettes(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, recette_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- CRÉATION DES INDEXES
+-- NOTE: Les tables seront créées par Hibernate
+-- Ce script charge uniquement les données
 -- ============================================
-CREATE INDEX idx_user_mail ON `user`(mail);
-CREATE INDEX idx_ingredient_libelle ON ingredient(libelle);
-CREATE INDEX idx_ingredient_type ON ingredient(type);
-CREATE INDEX idx_recette_user_id ON recette(user_id);
-CREATE INDEX idx_recette_partage ON recette(partage);
-CREATE INDEX idx_recette_ingredient_recette_id ON recette_ingredient(recette_id);
-CREATE INDEX idx_recette_ingredient_ingredient_id ON recette_ingredient(ingredient_id);
 
 -- ============================================
 -- INSERTION DES UTILISATEURS
 -- ============================================
-INSERT INTO `user` (nom, prenom, mail, password, telephone, role) VALUES
+INSERT INTO `users` (nom, prenom, mail, password, telephone, role) VALUES
 ('Dupont', 'Alice', 'alice.dupont@example.com', '$2a$10$slYQmyNdGzin7olVN3p5be3DlH.PKZbv5H8KnzzVgXXbVxzy990qm', '06 12 34 56 78', 'USER'),
 ('Martin', 'Robert', 'robert.martin@example.com', '$2a$10$slYQmyNdGzin7olVN3p5be3DlH.PKZbv5H8KnzzVgXXbVxzy990qm', '06 23 45 67 89', 'USER'),
 ('Bernard', 'Marie', 'marie.bernard@example.com', '$2a$10$slYQmyNdGzin7olVN3p5be3DlH.PKZbv5H8KnzzVgXXbVxzy990qm', '06 34 56 78 90', 'ADMIN'),
@@ -107,7 +95,7 @@ INSERT INTO `user` (nom, prenom, mail, password, telephone, role) VALUES
 -- ============================================
 -- INSERTION DES INGREDIENTS
 -- ============================================
-INSERT INTO ingredient (libelle, type, nombre_calorie) VALUES
+INSERT INTO ingredients (libelle, type, nombre_calorie) VALUES
 -- FRUITS
 ('Pomme', 'FRUITS', 52),
 ('Banane', 'FRUITS', 89),
@@ -158,7 +146,7 @@ INSERT INTO ingredient (libelle, type, nombre_calorie) VALUES
 -- ============================================
 -- INSERTION DES RECETTES
 -- ============================================
-INSERT INTO recette (nom_plat, duree_preparation, duree_cuisson, nombre_calorie, partage, user_id) VALUES
+INSERT INTO `recettes` (nom_plat, duree_preparation, duree_cuisson, nombre_calorie, partage, user_id) VALUES
 -- Recettes d'Alice (1)
 ('Salade César', 15, 0, 350, true, 1),
 ('Pâtes Carbonara', 10, 20, 550, true, 1),
@@ -251,26 +239,26 @@ INSERT INTO recette_ingredient (quantite, unite, recette_id, ingredient_id) VALU
 (1, 'tranche', 9, 8);    -- Tomate
 
 -- ============================================
--- INSERTION DES FAVORIS (USER_RECETTES_FAVORITES)
+-- INSERTION DES FAVORIS (USER_RECETTE_FAVORITE)
 -- ============================================
 -- Alice ajoute des recettes à ses favoris
-INSERT INTO user_recettes_favorites (users_id, recettes_favorites_id) VALUES
+INSERT INTO user_recette_favorite (user_id, recette_id) VALUES
 (1, 2),  -- Pates Carbonara
 (1, 5);  -- Fish and Chips
 
 -- Robert ajoute des recettes à ses favoris
-INSERT INTO user_recettes_favorites (users_id, recettes_favorites_id) VALUES
+INSERT INTO user_recette_favorite (user_id, recette_id) VALUES
 (2, 1),  -- Salade César
 (2, 3);  -- Poulet rôti
 
 -- Marie ajoute des recettes à ses favoris
-INSERT INTO user_recettes_favorites (users_id, recettes_favorites_id) VALUES
+INSERT INTO user_recette_favorite (user_id, recette_id) VALUES
 (3, 1),  -- Salade César
 (3, 2),  -- Pâtes Carbonara
 (3, 6);  -- Tarte aux pommes
 
 -- Jean ajoute des recettes à ses favoris
-INSERT INTO user_recettes_favorites (users_id, recettes_favorites_id) VALUES
+INSERT INTO user_recette_favorite (user_id, recette_id) VALUES
 (4, 1),  -- Salade César
 (4, 7);  -- Soupe de légumes
 

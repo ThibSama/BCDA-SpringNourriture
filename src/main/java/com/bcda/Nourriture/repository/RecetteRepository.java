@@ -11,5 +11,4 @@ import java.util.List;
 public interface RecetteRepository extends JpaRepository<Recette, Long> {
     List<Recette> findByUser(User user);
     List<Recette> findByPartageTrue();
-    List<Recette> findByUserFetchEager(User user);
 }

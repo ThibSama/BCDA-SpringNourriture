@@ -3,6 +3,7 @@ package com.bcda.Nourriture.controller;
 import com.bcda.Nourriture.dto.UserDTO;
 import com.bcda.Nourriture.mapper.UserMapper;
 import com.bcda.Nourriture.service.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +15,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @Slf4j
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;

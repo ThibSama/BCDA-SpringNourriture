@@ -29,11 +29,13 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @Data
+@EqualsAndHashCode(exclude = {"recettesPersonnelles", "recettesFavorites"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

@@ -1,6 +1,8 @@
 package com.bcda.Nourriture.service;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final AuthenticationManager authenticationManager;
+    private final ObjectProvider<AuthenticationManager> authenticationManagerProvider;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
 
@@ -51,7 +53,11 @@ public class AuthService implements UserDetailsService {
 
     public String login(String email, String password) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            AuthenticationManager authManager = authenticationManagerProvider.getIfAvailable();
+            if (authManager == null) {
+                throw new RuntimeException("AuthenticationManager not available");
+            }
+            Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
             );
             
@@ -60,7 +66,7 @@ public class AuthService implements UserDetailsService {
             return token;
         } catch (org.springframework.security.core.AuthenticationException e) {
             log.error("Erreur de connexion pour l'utilisateur : {}", email);
-            throw new RuntimeException("Identifiants invalides");
+            throw new BadCredentialsException("Identifiants invalides");
         }
     }
 

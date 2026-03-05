@@ -1,5 +1,6 @@
 package com.bcda.Nourriture.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectProvider<JwtAuthenticationFilter> jwtAuthenticationFilterProvider;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -50,9 +51,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz ->
                         authz
                                 // Endpoints publics
-                                .requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers("/api/recettes/shared").permitAll()
-                                .requestMatchers("/api/recettes/{id}/shared").permitAll()
+                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/recettes/shared").permitAll()
+                                .requestMatchers("/recettes/*/ingredients").permitAll()
                                 
                                 // Swagger/OpenAPI
                                 .requestMatchers("/v3/api-docs/**").permitAll()
@@ -62,7 +63,7 @@ public class SecurityConfig {
                                 // Tous les autres endpoints requièrent l'authentification
                                 .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilterProvider.getIfAvailable(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

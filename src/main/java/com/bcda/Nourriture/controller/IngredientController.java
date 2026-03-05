@@ -4,6 +4,7 @@ import com.bcda.Nourriture.dto.IngredientDTO;
 import com.bcda.Nourriture.entity.IngredientType;
 import com.bcda.Nourriture.mapper.IngredientMapper;
 import com.bcda.Nourriture.service.IngredientService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +17,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/ingredients")
+@RequestMapping("/ingredients")
 @RequiredArgsConstructor
 @Slf4j
+@SecurityRequirement(name = "bearerAuth")
 public class IngredientController {
 
     private final IngredientService ingredientService;
