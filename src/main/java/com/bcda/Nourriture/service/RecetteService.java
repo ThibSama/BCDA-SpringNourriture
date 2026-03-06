@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bcda.Nourriture.entity.Recette;
 import com.bcda.Nourriture.entity.RecetteIngredient;
 import com.bcda.Nourriture.entity.User;
+import com.bcda.Nourriture.exception.RecetteNotFoundException;
+import com.bcda.Nourriture.exception.UserNotFoundException;
 import com.bcda.Nourriture.repository.RecetteIngredientRepository;
 import com.bcda.Nourriture.repository.RecetteRepository;
 import com.bcda.Nourriture.repository.UserRepository;
@@ -56,11 +58,21 @@ public class RecetteService {
         Recette recette = recetteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Recette non trouvée avec l'ID : " + id));
         
-        recette.setNomPlat(recetteDetails.getNomPlat());
-        recette.setDureePreparation(recetteDetails.getDureePreparation());
-        recette.setDureeCuisson(recetteDetails.getDureeCuisson());
-        recette.setNombreCalorie(recetteDetails.getNombreCalorie());
-        recette.setPartage(recetteDetails.getPartage());
+        if (recetteDetails.getNomPlat() != null && !recetteDetails.getNomPlat().isEmpty()) {
+            recette.setNomPlat(recetteDetails.getNomPlat());
+        }
+        if (recetteDetails.getDureePreparation() != null) {
+            recette.setDureePreparation(recetteDetails.getDureePreparation());
+        }
+        if (recetteDetails.getDureeCuisson() != null) {
+            recette.setDureeCuisson(recetteDetails.getDureeCuisson());
+        }
+        if (recetteDetails.getNombreCalorie() != null) {
+            recette.setNombreCalorie(recetteDetails.getNombreCalorie());
+        }
+        if (recetteDetails.getPartage() != null) {
+            recette.setPartage(recetteDetails.getPartage());
+        }
         
         Recette updatedRecette = recetteRepository.save(recette);
         log.info("Recette mise à jour : {}", updatedRecette.getNomPlat());
@@ -69,7 +81,7 @@ public class RecetteService {
 
     public void deleteRecette(Long id) {
         if (!recetteRepository.existsById(id)) {
-            throw new RuntimeException("Recette non trouvée avec l'ID : " + id);
+            throw new RecetteNotFoundException("Recette non trouvée avec l'ID : " + id);
         }
         recetteRepository.deleteById(id);
         log.info("Recette supprimée avec l'ID : {}", id);
@@ -77,7 +89,7 @@ public class RecetteService {
 
     public void addIngredientToRecette(Long recetteId, RecetteIngredient recetteIngredient) {
         Recette recette = recetteRepository.findById(recetteId)
-                .orElseThrow(() -> new RuntimeException("Recette non trouvée"));
+                .orElseThrow(() -> new RecetteNotFoundException("Recette non trouvée"));
         recetteIngredient.setRecette(recette);
         recetteIngredientRepository.save(recetteIngredient);
         log.info("Ingrédient ajouté à la recette : {}", recette.getNomPlat());
@@ -85,7 +97,7 @@ public class RecetteService {
 
     public void removeIngredientFromRecette(Long recetteIngredientId) {
         if (!recetteIngredientRepository.existsById(recetteIngredientId)) {
-            throw new RuntimeException("Lien recette-ingrédient non trouvé");
+            throw new RecetteNotFoundException("Lien recette-ingédient non trouvé");
         }
         recetteIngredientRepository.deleteById(recetteIngredientId);
         log.info("Ingrédient retiré de la recette");
@@ -93,15 +105,15 @@ public class RecetteService {
 
     public List<RecetteIngredient> getRecetteIngredients(Long recetteId) {
         Recette recette = recetteRepository.findById(recetteId)
-                .orElseThrow(() -> new RuntimeException("Recette non trouvée"));
+                .orElseThrow(() -> new RecetteNotFoundException("Recette non trouvée"));
         return recetteIngredientRepository.findByRecette(recette);
     }
 
     public void addFavorite(Long userId, Long recetteId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
         Recette recette = recetteRepository.findById(recetteId)
-                .orElseThrow(() -> new RuntimeException("Recette non trouvée"));
+                .orElseThrow(() -> new RecetteNotFoundException("Recette non trouvée"));
         
         user.getRecettesFavorites().add(recette);
         userRepository.save(user);
@@ -110,9 +122,9 @@ public class RecetteService {
 
     public void removeFavorite(Long userId, Long recetteId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
         Recette recette = recetteRepository.findById(recetteId)
-                .orElseThrow(() -> new RuntimeException("Recette non trouvée"));
+                .orElseThrow(() -> new RecetteNotFoundException("Recette non trouvée"));
         
         user.getRecettesFavorites().remove(recette);
         userRepository.save(user);
@@ -121,7 +133,7 @@ public class RecetteService {
 
     public Set<Recette> getUserFavorites(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
         return user.getRecettesFavorites();
     }
 }

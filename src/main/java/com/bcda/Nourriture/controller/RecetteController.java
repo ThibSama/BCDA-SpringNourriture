@@ -1,22 +1,37 @@
 package com.bcda.Nourriture.controller;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.bcda.Nourriture.dto.CreateRecetteDTO;
 import com.bcda.Nourriture.dto.RecetteDTO;
 import com.bcda.Nourriture.dto.RecetteIngredientDTO;
 import com.bcda.Nourriture.mapper.RecetteIngredientMapper;
 import com.bcda.Nourriture.mapper.RecetteMapper;
+import com.bcda.Nourriture.service.ExportService;
 import com.bcda.Nourriture.service.RecetteService;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/recettes")
@@ -26,16 +41,26 @@ import java.util.stream.Collectors;
 public class RecetteController {
 
     private final RecetteService recetteService;
+    private final ExportService exportService;
+    private final com.bcda.Nourriture.service.UserService userService;
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<RecetteDTO> createRecette(
-            @Valid @RequestBody RecetteDTO recetteDTO,
+            @Valid @RequestBody CreateRecetteDTO createRecetteDTO,
             Authentication authentication) {
-        log.info("Création d'une nouvelle recette : {}", recetteDTO.getNomPlat());
+        log.info("Création d'une nouvelle recette : {}", createRecetteDTO.getNomPlat());
         
-        var recette = recetteService.createRecette(RecetteMapper.toEntity(recetteDTO));
-        return ResponseEntity.status(HttpStatus.CREATED).body(RecetteMapper.toDTO(recette));
+        var recette = RecetteMapper.toEntity(createRecetteDTO);
+        
+        // Get the current user and set it on the recette
+        String email = authentication.getName();
+        var user = userService.getUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé : " + email));
+        recette.setUser(user);
+        
+        var createdRecette = recetteService.createRecette(recette);
+        return ResponseEntity.status(HttpStatus.CREATED).body(RecetteMapper.toDTO(createdRecette));
     }
 
     @GetMapping
@@ -178,5 +203,34 @@ public class RecetteController {
                 .collect(Collectors.toList());
         
         return ResponseEntity.ok(favorites);
+    }
+
+    // ==================== EXPORT ====================
+
+    @GetMapping("/{id}/export/pdf")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable Long id) throws IOException {
+        log.info("Export PDF pour la recette {}", id);
+        byte[] pdf = exportService.exportRecetteToPdf(id);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename("recette-" + id + ".pdf")
+                .build());
+        return ResponseEntity.ok().headers(headers).body(pdf);
+    }
+
+    @GetMapping("/{id}/export/xlsx")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<byte[]> exportXlsx(@PathVariable Long id) throws IOException {
+        log.info("Export XLSX pour la recette {}", id);
+        byte[] xlsx = exportService.exportRecetteToXlsx(id);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDisposition(ContentDisposition.attachment()
+                .filename("recette-" + id + ".xlsx")
+                .build());
+        return ResponseEntity.ok().headers(headers).body(xlsx);
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bcda.Nourriture.entity.Ingredient;
 import com.bcda.Nourriture.entity.IngredientType;
+import com.bcda.Nourriture.exception.IngredientNotFoundException;
 import com.bcda.Nourriture.repository.IngredientRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -47,11 +48,18 @@ public class IngredientService {
 
     public Ingredient updateIngredient(Long id, Ingredient ingredientDetails) {
         Ingredient ingredient = ingredientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ingrédient non trouvé avec l'ID : " + id));
+                .orElseThrow(() -> new IngredientNotFoundException("Ingédient non trouvé avec l'ID : " + id));
         
-        ingredient.setLibelle(ingredientDetails.getLibelle());
-        ingredient.setType(ingredientDetails.getType());
-        ingredient.setNombreCalorie(ingredientDetails.getNombreCalorie());
+        // Ne mettez à jour que les champs fournis (non-null)
+        if (ingredientDetails.getLibelle() != null && !ingredientDetails.getLibelle().isEmpty()) {
+            ingredient.setLibelle(ingredientDetails.getLibelle());
+        }
+        if (ingredientDetails.getType() != null) {
+            ingredient.setType(ingredientDetails.getType());
+        }
+        if (ingredientDetails.getNombreCalorie() != null) {
+            ingredient.setNombreCalorie(ingredientDetails.getNombreCalorie());
+        }
         
         Ingredient updatedIngredient = ingredientRepository.save(ingredient);
         log.info("Ingrédient mis à jour : {}", updatedIngredient.getLibelle());
@@ -60,7 +68,7 @@ public class IngredientService {
 
     public void deleteIngredient(Long id) {
         if (!ingredientRepository.existsById(id)) {
-            throw new RuntimeException("Ingrédient non trouvé avec l'ID : " + id);
+            throw new IngredientNotFoundException("Ingédient non trouvé avec l'ID : " + id);
         }
         ingredientRepository.deleteById(id);
         log.info("Ingrédient supprimé avec l'ID : {}", id);

@@ -162,7 +162,10 @@ INSERT INTO `recettes` (nom_plat, duree_preparation, duree_cuisson, nombre_calor
 
 -- Recettes de Jean (4)
 ('Omelette simple', 5, 10, 280, false, 4),
-('Sandwich au fromage', 5, 0, 380, false, 4);
+('Sandwich au fromage', 5, 0, 380, false, 4),
+
+-- Recette de Robert (2) - supplémentaire
+('Gratin de légumes', 25, 35, 380, true, 2);
 
 -- ============================================
 -- INSERTION DES RECETTE_INGREDIENT
@@ -237,6 +240,17 @@ INSERT INTO recette_ingredient (quantite, unite, recette_id, ingredient_id) VALU
 (50, 'g', 9, 17),        -- Fromage cheddar
 (20, 'g', 9, 19),        -- Beurre
 (1, 'tranche', 9, 8);    -- Tomate
+
+-- Gratin de légumes (10)
+INSERT INTO recette_ingredient (quantite, unite, recette_id, ingredient_id) VALUES
+(200, 'g', 10, 6),      -- Carotte
+(200, 'g', 10, 7),      -- Brocoli
+(150, 'g', 10, 10),     -- Poivron rouge
+(200, 'ml', 10, 20),    -- Crème fraîche
+(100, 'g', 10, 17),     -- Fromage cheddar
+(30, 'g', 10, 19),      -- Beurre
+(3, 'pincée', 10, 16),  -- Sel
+(2, 'pincée', 10, 24);  -- Poivre noir
 
 -- ============================================
 -- INSERTION DES FAVORIS (USER_RECETTE_FAVORITE)

@@ -1,18 +1,27 @@
 package com.bcda.Nourriture.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.bcda.Nourriture.dto.UserDTO;
+import com.bcda.Nourriture.exception.UserNotFoundException;
 import com.bcda.Nourriture.mapper.UserMapper;
 import com.bcda.Nourriture.service.UserService;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -41,7 +50,7 @@ public class UserController {
         log.info("Récupération de l'utilisateur avec l'ID : {}", id);
         
         var user = userService.getUserById(id)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
         
         return ResponseEntity.ok(UserMapper.toDTO(user));
     }
@@ -52,7 +61,7 @@ public class UserController {
         log.info("Récupération de l'utilisateur avec l'email : {}", email);
         
         var user = userService.getUserByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new UserNotFoundException("Utilisateur non trouvé"));
         
         return ResponseEntity.ok(UserMapper.toDTO(user));
     }

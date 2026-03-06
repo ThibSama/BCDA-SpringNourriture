@@ -1,11 +1,13 @@
 package com.bcda.Nourriture.mapper;
 
-import com.bcda.Nourriture.dto.RecetteDTO;
-import com.bcda.Nourriture.entity.Recette;
-import lombok.experimental.UtilityClass;
-
 import java.util.Collections;
 import java.util.stream.Collectors;
+
+import com.bcda.Nourriture.dto.CreateRecetteDTO;
+import com.bcda.Nourriture.dto.RecetteDTO;
+import com.bcda.Nourriture.entity.Recette;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RecetteMapper {
@@ -49,6 +51,20 @@ public class RecetteMapper {
                 .dureeCuisson(recetteDTO.getDureeCuisson())
                 .nombreCalorie(recetteDTO.getNombreCalorie())
                 .partage(recetteDTO.getPartage() != null && recetteDTO.getPartage())
+                .build();
+    }
+
+    public Recette toEntity(CreateRecetteDTO createRecetteDTO) {
+        if (createRecetteDTO == null) {
+            return null;
+        }
+
+        return Recette.builder()
+                .nomPlat(createRecetteDTO.getNomPlat())
+                .dureePreparation(createRecetteDTO.getDureePreparation())
+                .dureeCuisson(createRecetteDTO.getDureeCuisson())
+                .nombreCalorie(createRecetteDTO.getNombreCalorie())
+                .partage(createRecetteDTO.getPartage() != null && createRecetteDTO.getPartage())
                 .build();
     }
 }
